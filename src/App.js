@@ -13,7 +13,7 @@ function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [validated, setValidated] = useState(false);
-
+  const [error, setError] = useState('')
   const handleEmailBlur = (event) => {
     setEmail(event.target.value);
   }
@@ -28,10 +28,12 @@ function App() {
       return;
     }
     if (!/(?=.*[!@#$%^&*])/.test(password)) {
+      setError('Password should contain at list one special character');
       return;
     }
 
     setValidated(true);
+    setError('')
     createUserWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
         const user = userCredential.user;
@@ -66,6 +68,7 @@ function App() {
               Please provide a valid password.
             </Form.Control.Feedback>
           </Form.Group>
+          <p className='text-danger'>{error}</p>
           <Button variant="primary" type="submit">
             Submit
           </Button>
