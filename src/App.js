@@ -1,5 +1,5 @@
 import './App.css';
-import { createUserWithEmailAndPassword, getAuth, sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, getAuth, sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
 import app from './firebase.init';
 import Form from 'react-bootstrap/Form'
 import { Button } from 'react-bootstrap';
@@ -11,9 +11,15 @@ function App() {
 
   const [registered, setRegistered] = useState(false);
   const [validated, setValidated] = useState(false);
+  const [name, setName] = useState();
   const [email, setEmail] = useState('');
+  const [success, setSuccess] = useState('')
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+
+  const handleNameBlur = (event) => {
+    setName(event.target.value)
+  }
 
   const handleEmailBlur = (event) => {
     setEmail(event.target.value);
@@ -45,6 +51,8 @@ function App() {
         .then((result) => {
           const user = result.user;
           console.log(user);
+          const successMessage = 'Login success';
+          setSuccess(successMessage);
 
         }).catch((error) => {
           const errorMessage = error.message;
@@ -59,7 +67,9 @@ function App() {
           console.log(user);
           setEmail('');
           setPassword('');
-          emailVerification()
+          emailVerification();
+          setUserName();
+
         }).catch((error) => {
           const errorCode = error.code;
           const errorMessage = error.message;
@@ -68,6 +78,16 @@ function App() {
         })
     }
     event.preventDefault()
+  }
+  const setUserName = () => {
+    updateProfile(auth.currentUser, {
+      displayName: name
+    })
+      .then(() => {
+        console.log('update profile name');
+      }).catch((error) => {
+        setError(error.message);
+      })
   }
   const emailVerification = () => {
     sendEmailVerification(auth.currentUser)
@@ -87,6 +107,14 @@ function App() {
       <div className="registration w-50 mx-auto mt-5">
         <h1 className='text-primary'>Please {registered ? 'Login' : 'Register'} </h1>
         <Form noValidate validated={validated} onSubmit={handleFormSubmit}>
+
+          {!registered && <Form.Group className="mb-3" controlId="formBasicEmail">
+            <Form.Label>Name </Form.Label>
+            <Form.Control onBlur={handleNameBlur} type="text" placeholder="Your email" required />
+            <Form.Control.Feedback type="invalid">
+              Please provide your name .
+            </Form.Control.Feedback>
+          </Form.Group>}
           <Form.Group className="mb-3" controlId="formBasicEmail">
             <Form.Label>Email address</Form.Label>
             <Form.Control onBlur={handleEmailBlur} type="email" placeholder="Enter email" required />
@@ -108,6 +136,7 @@ function App() {
           <Form.Group className="mb-3" controlId="formBasicCheckbox">
             <Form.Check onChange={handleRegisteredChange} type="checkbox" label="Already registered?" />
           </Form.Group>
+          <p className='text-success'>{success}</p>
           <p className='text-danger'>{error}</p>
           <Button onClick={handelForgetPassword} variant='link'>
             Forget Password?
