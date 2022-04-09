@@ -1,24 +1,29 @@
 import './App.css';
-import { createUserWithEmailAndPassword, getAuth } from "firebase/auth";
+import { createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import app from './firebase.init';
 import Form from 'react-bootstrap/Form'
 import { Button } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useState } from 'react';
-
-
 const auth = getAuth(app);
 
 function App() {
+
+  const [registered, setRegistered] = useState(false);
+  const [validated, setValidated] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [validated, setValidated] = useState(false);
-  const [error, setError] = useState('')
+  const [error, setError] = useState('');
+
   const handleEmailBlur = (event) => {
     setEmail(event.target.value);
   }
+
   const handlePasswordBlur = (event) => {
     setPassword(event.target.value);
+  }
+  const handleRegisteredChange = (event) => {
+    setRegistered(event.target.checked);
   }
   const handleFormSubmit = (event) => {
     event.preventDefault();
@@ -27,6 +32,7 @@ function App() {
       event.stopPropagation();
       return;
     }
+
     if (!/(?=.*[!@#$%^&*])/.test(password)) {
       setError('Password should contain at list one special character');
       return;
@@ -34,21 +40,41 @@ function App() {
 
     setValidated(true);
     setError('')
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        const user = userCredential.user;
-        console.log(user);
-      }).catch((error) => {
-        const errorCode = error.code;
-        console.log(errorCode);
-      })
-    console.log(email, password);
+    if (registered) {
+      signInWithEmailAndPassword(auth, email, password)
+        .then((result) => {
+          const user = result.user;
+          console.log(user);
+        }).catch((error) => {
+          const errorMessage = error.message;
+          console.log(errorMessage)
+          setError(errorMessage);
+        })
+    }
+    else {
+      createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          console.log(user);
+          setEmail('');
+          setPassword('');
+        }).catch((error) => {
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          setError(errorMessage)
+          console.log(errorCode);
+        })
+    }
+
+
     event.preventDefault()
   }
+
+
   return (
     <div>
       <div className="registration w-50 mx-auto mt-5">
-        <h1 className='text-primary'>Please Register</h1>
+        <h1 className='text-primary'>Please {registered ? 'Login' : 'Register'} </h1>
         <Form noValidate validated={validated} onSubmit={handleFormSubmit}>
           <Form.Group className="mb-3" controlId="formBasicEmail">
             <Form.Label>Email address</Form.Label>
@@ -68,9 +94,12 @@ function App() {
               Please provide a valid password.
             </Form.Control.Feedback>
           </Form.Group>
+          <Form.Group className="mb-3" controlId="formBasicCheckbox">
+            <Form.Check onChange={handleRegisteredChange} type="checkbox" label="Already registered?" />
+          </Form.Group>
           <p className='text-danger'>{error}</p>
           <Button variant="primary" type="submit">
-            Submit
+            {registered ? 'Login' : 'Register'}
           </Button>
         </Form>
 
