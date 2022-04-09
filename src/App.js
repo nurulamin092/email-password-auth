@@ -13,6 +13,7 @@ function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [validated, setValidated] = useState(false);
+
   const handleEmailBlur = (event) => {
     setEmail(event.target.value);
   }
@@ -20,12 +21,16 @@ function App() {
     setPassword(event.target.value);
   }
   const handleFormSubmit = (event) => {
-
+    event.preventDefault();
     const form = event.currentTarget;
     if (form.checkValidity() === false) {
-      event.preventDefault();
       event.stopPropagation();
+      return;
     }
+    if (!/(?=.*[!@#$%^&*])/.test(password)) {
+      return;
+    }
+
     setValidated(true);
     createUserWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
